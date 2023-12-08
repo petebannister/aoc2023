@@ -31,5 +31,6 @@
 *.out
 *.app
 
-.vs/*
-!.vs/launch.vs.json
+*/.vs/*
+!*/.vs/launch.vs.json
+
