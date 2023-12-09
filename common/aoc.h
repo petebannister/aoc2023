@@ -129,6 +129,31 @@ public:
 		}
 		s_.remove_prefix(1);
 	}
+    template <typename T>
+    std::vector<T> vec(char delim = ' ', char end_delim = ' ') {
+        std::vector<T> v;
+        while (!s_.empty()) {
+            v.push_back(read<T>());
+
+            if (!s_.empty()) {
+                if (s_.front() == end_delim) {
+					s_.remove_prefix(1);
+					break;
+				}
+                if (delim != ' ') {
+                    expect(delim);
+                }
+            }
+            trim_left(s_);
+        }
+        return v;
+    }
+    std::vector<uint32_t> vec_u32(char delim = ' ', char end_delim = ' ') {
+        return vec<uint32_t>(delim, end_delim);
+    }
+    std::vector<int32_t> vec_i32(char delim = ' ', char end_delim = ' ') {
+        return vec<int32_t>(delim, end_delim);
+    }
 };
 
 //-----------------------------------------------------------------------------
