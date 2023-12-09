@@ -14,6 +14,7 @@ void Solve() {
     for (Scanner s : i.lines()) {
         auto nums = s.vec<T>();
         vector<T> diffs;
+        vector<T> first_diffs;
         auto last = nums.front();
         for (auto num : views::drop(nums, 1)) {
             auto d = num - last;
@@ -25,6 +26,9 @@ void Solve() {
                 d = dd;
             }
             diffs.push_back(dd);
+            if (first_diffs.size() < diffs.size()) {
+				first_diffs.push_back(dd);
+			}
         }
 
         // extrapolate
@@ -34,8 +38,17 @@ void Solve() {
             dd = d;
         }
         auto r = nums.back() + dd;
-        println(linenum, " ", r);
+        //println(linenum, " ", r);
         part1 += r;
+        
+        dd = 0;
+        for (auto& d : views::reverse(first_diffs)) {
+            d -= dd;
+            dd = d;
+        }
+        auto r2 = nums.front() - dd;
+        println(linenum, " ", r2);
+        part2 += r2;
 
         ++linenum;
     }
