@@ -1,0 +1,13 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "@CMAKE_PROJECT_NAME@.exe",
+      "name": "@CMAKE_PROJECT_NAME@.exe",
+      "currentDir": "@CMAKE_CURRENT_LIST_DIR@"
+    }
+  ]
+}
