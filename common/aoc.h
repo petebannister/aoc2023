@@ -367,7 +367,7 @@ struct Point {
         return h(x) ^ h(y);
     }
 };
-using points = std::vector<Point>;
+using Points = std::vector<Point>;
 
 namespace std {
     template <>
