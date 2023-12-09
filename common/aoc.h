@@ -89,6 +89,70 @@ inline string_view trim(string_view s) {
 }
 
 //-----------------------------------------------------------------------------
+template <typename T>
+struct num_range {
+    using self = num_range<T>;
+    struct iterator {
+        T v;
+        iterator& operator++() {
+            ++v;
+            return *this;
+        }
+        T const& operator*() const {
+            return v;
+        }
+        bool operator==(iterator const& r) const {
+            return v == r.v;
+        }
+        bool operator!=(iterator const& r) const {
+            return !(*this == r);
+        }
+    };
+    T start_ = 0;
+    T limit_ = 0;
+    iterator begin() const {
+        return iterator{ start_ };
+    }
+    iterator end() const {
+        return iterator{ limit_ };
+    }
+    bool empty() const {
+        return (start_ == limit_);
+    }
+    bool intersects(self const& other) const {
+        return ((other.start_ < limit_) && (other.limit_ > start_));
+    }
+    bool contains(self const& other) const {
+        return ((other.start_ >= start_) && (other.limit_ <= limit_));
+    }
+    bool contains(T const& v) const {
+        return ((v >= start_) && (v < limit_));
+    }
+    T size() const {
+        return (limit_ - start_);
+    }
+};
+//-----------------------------------------------------------------------------
+template <typename T>
+inline num_range<T> integers(T limit) {
+    return num_range<T>{0, limit};
+}
+//-----------------------------------------------------------------------------
+template <typename T>
+inline num_range<T> integers(T start, T limit) {
+    return num_range<T>{start, limit};
+}
+
+//-----------------------------------------------------------------------------
+inline auto equals(auto v) {
+	return [v](auto const& r) { return r == v; };
+}
+//-----------------------------------------------------------------------------
+inline bool all_of_v(auto&& view, auto v) {
+	return ranges::all_of(view, equals(v));
+}
+
+//-----------------------------------------------------------------------------
 class Scanner
 {
 private:
