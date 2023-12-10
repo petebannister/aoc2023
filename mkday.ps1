@@ -29,3 +29,4 @@ Push-Location tmp
 # e.g. cmake -DAOC_DAY=day01 -S template -B day01
 cmake .. -DAOC_DAY="$day" --fresh
 Pop-Location
+Pop-Location

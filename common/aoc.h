@@ -297,31 +297,31 @@ struct Point {
     int x = 0;
     int y = 0;
 
-    bool operator== (Point const& p) const {
+    constexpr bool operator== (Point const& p) const {
         return (x == p.x) && (y == p.y);
     }
-    bool operator!= (Point const& p) const {
+    constexpr bool operator!= (Point const& p) const {
         return !(*this == p);
     }
-    auto fields() const {
+    constexpr auto fields() const {
         return std::tie(x, y);
     }
-    bool operator< (Point const& p) const {
+    constexpr bool operator< (Point const& p) const {
         return (fields() < p.fields());
     }
-    Point operator-(Point const& rhs) const {
+    constexpr Point operator-(Point const& rhs) const {
         return { x - rhs.x, y - rhs.y };
     }
-    Point operator+(Point const& rhs) const {
+    constexpr Point operator+(Point const& rhs) const {
         return { x + rhs.x, y + rhs.y };
     }
-    Point& operator+=(Point const& rhs) {
+    constexpr Point& operator+=(Point const& rhs) {
         return (*this = *this + rhs);
     }
-    Point& operator-=(Point const& rhs) {
+    constexpr Point& operator-=(Point const& rhs) {
         return (*this = *this - rhs);
     }
-    Point minimized() const {
+    constexpr Point minimized() const {
         if (x == 0) {
             if (y == 0) {
                 return *this;
@@ -339,10 +339,10 @@ struct Point {
         }
         return p;
     }
-    Point cw90() const {
+    constexpr Point cw90() const {
         return Point{ -y, x };
     }
-    Point ccw90() const {
+    constexpr Point ccw90() const {
         return Point{ y, -x };
     }
     void swapxy() {
