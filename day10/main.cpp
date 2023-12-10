@@ -12,34 +12,27 @@ constexpr uint8_t R = 1;
 constexpr uint8_t D = 2;
 constexpr uint8_t L = 3;
 constexpr Point INVALID = { 0, 0 };
+constexpr int INVALID_TURN = 666;
 
 //-----------------------------------------------------------------------------
-constexpr int turn(Point dir, char c) {
+constexpr int turn(Point dir, char c) 
+{
+    if ((c == '|') || (c == '-')) {
+        return 0;
+    }
     if (dir == DIRS[U]) {
-        if (c == '|') {
-            return 0;
-        }
-        return (c == 'F') ? 1 : -1;
+        return (c == 'F') ? 1 : (c == '7') ? -1 : INVALID_TURN;
     }
     if (dir == DIRS[R]) {
-        if (c == '-') {
-            return 0;
-        }
-        return (c == '7') ? 1 : -1;
+        return (c == '7') ? 1 : (c == 'J') ? -1 : INVALID_TURN;
     }
     if (dir == DIRS[D]) {
-        if (c == '|') {
-            return 0;
-        }
-        return (c == 'J') ? 1 : -1;
+        return (c == 'J') ? 1 : (c == 'L') ? -1 : INVALID_TURN;
     }
     if (dir == DIRS[L]) {
-        if (c == '-') {
-            return 0;
-        }
-        return (c == 'L') ? 1 : -1;
+        return (c == 'L') ? 1 : (c == 'F') ? -1 : INVALID_TURN;
     }
-    return 0;
+    return INVALID_TURN;
 }
 //-----------------------------------------------------------------------------
 Point turn_dir(Point dir, int t) {
@@ -60,7 +53,7 @@ Point go(Point dir, int c) {
 
 //-----------------------------------------------------------------------------
 void Solve() {
-    Input i;
+    Input i; // ("ex2.txt");
 
     auto lines = i.lines();
     vector<string_view> maze(lines.begin(), lines.end());
@@ -68,16 +61,16 @@ void Solve() {
 
     // Get a symbol from the maze.
     auto get = [&](Point p) {
-        if (p.y >= 0 || p.y < (int)maze.size()) {
+        if (p.y >= 0 && p.y < (int)maze.size()) {
 		    auto& row = maze[p.y];
-            if (p.x > 0 || p.x < (int)row.size()) {
+            if (p.x >= 0 && p.x < (int)row.size()) {
                 return row[p.x];
             }
 		}
 		return '.';
 	};
 
-    Point S;
+    Point S; // Find the starting point.
     for (auto y : integers(maze.size())) {
         auto x = maze[y].find('S');
         if (x != string_view::npos) {
@@ -85,35 +78,35 @@ void Solve() {
 			break;
 		}    
     }
+
+    // Find the loop.  This will account for possibility
+    // of a starting path that is a dead end also.
+    int a = 0; // angle
+    uint32_t steps = 0u;
     auto initial_dir = INVALID;
     for (auto d : DIRS) {
-        auto p = S + d;
-        auto c = get(p);
-        auto dd = go(d, c);
-        if (dd != INVALID) {
-            initial_dir = dd;
-            break;
+        initial_dir = d;
+        auto p = S + initial_dir;
+        a = 0; // angle
+        loop_points = { p };
+        steps = 0u;
+        while (p != S) {
+            auto c = get(p);
+            auto t = turn(d, c);
+            if (t == INVALID_TURN) {
+				break;
+			}
+            a += t;
+            d = turn_dir(d, t);
+            p += d;
+            ++steps;
+            loop_points.insert(p);
         }
+        if (p == S) {
+            break;
+		}
     }
-    assert(initial_dir != INVALID);
-
-    auto d = initial_dir;
-    auto p = S + initial_dir;
-    uint32_t steps = 0u;
-    int a = 0; // angle
-    while (p != S) {
-        auto c = get(p);
-        auto t = turn(d, c);
-        a += t;
-        d = turn_dir(d, t);
-        p += d;
-        ++steps;
-        loop_points.insert(p);
-    }
-    assert(steps % 2 != 0); // Should be odd for a unique solution.
-    assert(a == 4 || a == -4); // Should be a closed loop in either CW or CCW direction.
-
-    auto part1 = (steps / 2) + 1; // since steps is odd + 1.
+    auto part1 = (steps / 2) + (steps % 2); // if steps is odd + 1.
     println("part1: ", part1); // 7086
 
     // Part 2
@@ -122,8 +115,8 @@ void Solve() {
     // seed the fill algorithm.
     unordered_set<Point> interior;
     bool const ccw = a < 0; // Determine which side of the loop line to fill.
-    d = initial_dir;
-    p = S + initial_dir;
+    auto d = initial_dir;
+    auto p = S + initial_dir;
     while (p != S) {
         auto c = get(p);
         auto dd = (ccw) ? d.ccw90() : d.cw90();
