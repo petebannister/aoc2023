@@ -1,16 +1,6 @@
 #include "aoc.h"
 
 
-constexpr Point const DIRS[] = {
-	{ 0, -1 },
-	{ 1, 0 },
-	{ 0, 1 },
-	{ -1, 0 },
-};
-constexpr uint8_t U = 0;
-constexpr uint8_t R = 1;
-constexpr uint8_t D = 2;
-constexpr uint8_t L = 3;
 constexpr Point INVALID = { 0, 0 };
 constexpr int INVALID_TURN = 666;
 
@@ -20,16 +10,16 @@ constexpr int turn(Point dir, char c)
     if ((c == '|') || (c == '-')) {
         return 0;
     }
-    if (dir == DIRS[U]) {
+    if (dir == Point::U()) {
         return (c == 'F') ? 1 : (c == '7') ? -1 : INVALID_TURN;
     }
-    if (dir == DIRS[R]) {
+    if (dir == Point::R()) {
         return (c == '7') ? 1 : (c == 'J') ? -1 : INVALID_TURN;
     }
-    if (dir == DIRS[D]) {
+    if (dir == Point::D()) {
         return (c == 'J') ? 1 : (c == 'L') ? -1 : INVALID_TURN;
     }
-    if (dir == DIRS[L]) {
+    if (dir == Point::L()) {
         return (c == 'L') ? 1 : (c == 'F') ? -1 : INVALID_TURN;
     }
     return INVALID_TURN;
@@ -84,7 +74,7 @@ void Solve() {
     int a = 0; // angle
     uint32_t steps = 0u;
     auto initial_dir = INVALID;
-    for (auto d : DIRS) {
+    for (auto d : Point::Dirs()) {
         initial_dir = d;
         auto p = S + initial_dir;
         a = 0; // angle
@@ -136,7 +126,7 @@ void Solve() {
     while (!q.empty()) {
 		auto p = q.back();
 		q.pop_back();
-        for (auto d : DIRS) {
+        for (auto d : Point::Dirs()) {
 			auto p2 = p + d;
             if (!interior.contains(p2)) {
                 if (!loop_points.contains(p2)) {

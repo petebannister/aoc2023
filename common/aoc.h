@@ -297,6 +297,19 @@ struct Point {
     int x = 0;
     int y = 0;
 
+    static constexpr Point U() { return { 0, -1 }; }
+    static constexpr Point R() { return { 1, 0 }; }
+    static constexpr Point D() { return { 0, 1 }; }
+    static constexpr Point L() { return { -1, 0 }; }
+    static constexpr array<Point, 4> const Dirs() {
+        return { {
+			{ 0, -1 },
+			{ 1, 0 },
+			{ 0, 1 },
+			{ -1, 0 },
+		} };
+    }
+
     constexpr bool operator== (Point const& p) const {
         return (x == p.x) && (y == p.y);
     }
