@@ -297,15 +297,18 @@ lcm(T x, T y)
     return (x * y) / gcd(x, y);
 }
 //-----------------------------------------------------------------------------
-struct Point {
-    int x = 0;
-    int y = 0;
+template <typename T>
+struct TPoint {
+    T x = 0;
+    T y = 0;
 
-    static constexpr Point U() { return { 0, -1 }; }
-    static constexpr Point R() { return { 1, 0 }; }
-    static constexpr Point D() { return { 0, 1 }; }
-    static constexpr Point L() { return { -1, 0 }; }
-    static constexpr array<Point, 4> const Dirs() {
+    using self = TPoint<T>;
+
+    static constexpr self U() { return { 0, -1 }; }
+    static constexpr self R() { return { 1, 0 }; }
+    static constexpr self D() { return { 0, 1 }; }
+    static constexpr self L() { return { -1, 0 }; }
+    static constexpr array<self, 4> const Dirs() {
         return { {
 			{ 0, -1 },
 			{ 1, 0 },
@@ -314,31 +317,31 @@ struct Point {
 		} };
     }
 
-    constexpr bool operator== (Point const& p) const {
+    constexpr bool operator== (self const& p) const {
         return (x == p.x) && (y == p.y);
     }
-    constexpr bool operator!= (Point const& p) const {
+    constexpr bool operator!= (self const& p) const {
         return !(*this == p);
     }
     constexpr auto fields() const {
         return std::tie(x, y);
     }
-    constexpr bool operator< (Point const& p) const {
+    constexpr bool operator< (self const& p) const {
         return (fields() < p.fields());
     }
-    constexpr Point operator-(Point const& rhs) const {
+    constexpr self operator-(self const& rhs) const {
         return { x - rhs.x, y - rhs.y };
     }
-    constexpr Point operator+(Point const& rhs) const {
+    constexpr self operator+(self const& rhs) const {
         return { x + rhs.x, y + rhs.y };
     }
-    constexpr Point& operator+=(Point const& rhs) {
+    constexpr self& operator+=(self const& rhs) {
         return (*this = *this + rhs);
     }
-    constexpr Point& operator-=(Point const& rhs) {
+    constexpr self& operator-=(self const& rhs) {
         return (*this = *this - rhs);
     }
-    constexpr Point minimized() const {
+    constexpr self minimized() const {
         if (x == 0) {
             if (y == 0) {
                 return *this;
@@ -356,11 +359,11 @@ struct Point {
         }
         return p;
     }
-    constexpr Point cw90() const {
-        return Point{ -y, x };
+    constexpr self cw90() const {
+        return self{ -y, x };
     }
-    constexpr Point ccw90() const {
-        return Point{ y, -x };
+    constexpr self ccw90() const {
+        return self{ y, -x };
     }
     void swapxy() {
         std::swap(x, y);
@@ -375,21 +378,29 @@ struct Point {
         }
         return a;
     }
-    int manhattan() const {
+    T manhattan() const {
         return abs(x) + abs(y);
     }
 
     size_t hash() const {
-        auto h = std::hash<int>();
+        auto h = std::hash<T>();
         return h(x) ^ h(y);
     }
 };
+using Point = TPoint<int>;
+using Point64 = TPoint<int64_t>;
 using Points = std::vector<Point>;
 
 namespace std {
     template <>
     struct hash<Point> {
         size_t operator()(Point const& p) const {
+            return p.hash();
+        }
+    };
+    template <>
+    struct hash<Point64> {
+        size_t operator()(Point64 const& p) const {
             return p.hash();
         }
     };
