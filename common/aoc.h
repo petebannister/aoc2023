@@ -259,6 +259,10 @@ public:
     auto lines() const {
         return strings(str() | views::split('\n'));
     }
+    auto lines_vec() const {
+        auto l = lines();
+        return std::vector<string_view>(l.begin(), l.end());
+    }
 };
 //-----------------------------------------------------------------------------
 template <typename T>
