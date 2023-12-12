@@ -159,6 +159,11 @@ private:
     string_view s_;
 public:
     Scanner(string_view s) : s_(s) {}
+
+    auto line() const {
+        return s_;
+    }
+
     template <typename T>
     T read() {
         T v;
