@@ -1,24 +1,27 @@
 #include "aoc.h"
 
 //-----------------------------------------------------------------------------
-void Solve() {
-    Input i;
+struct Solver
+{
+    void solve(bool part2) {
+        Input i;
 
-    uint32_t part1 = 0u;
-    uint32_t part2 = 0u;
+        uint32_t ans = 0u;
 
-    for (string_view line : i.lines()) {
-        split(line, ' ');
+        for (string_view line : i.lines()) {
+            split(line, ' ');
+        }
+
+        println((part2) ? "part2: " : "part1: ", ans);
     }
-
-    println("part1: ", part1);
-    println("part2: ", part2);
-}
+};
 
 //-----------------------------------------------------------------------------
 int main() {
     try {
-        Solve();    
+        Solver s;
+        s.solve(false);
+        s.solve(true);
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
