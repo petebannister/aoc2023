@@ -1,14 +1,16 @@
 #include "aoc.h"
 
 //-----------------------------------------------------------------------------
+template <bool part2>
 struct Solver
 {
     using V = vector<vector<bool>>;
     V cols;
     V rows;
+    int gridnum = 0;
 
-    void solve(bool part2) {
-        Input i;// ("example.txt");
+    void solve() {
+        Input i; // ("example.txt");
 
         uint64_t ans = 0u;
 
@@ -19,6 +21,7 @@ struct Solver
 				cols.clear();
 				rows.clear();
                 row = 0u;
+                ++gridnum;
 				continue;
 			}
             rows.resize(row + 1u);
@@ -42,20 +45,43 @@ struct Solver
         println((part2) ? "part2: " : "part1: ", ans);
     }
     uint32_t solve_i() {
-        auto r = reflectionPoint(rows);
-        auto c = reflectionPoint(cols);
         uint32_t x = 0u;
-        if (r > 0) {
-			x += r * 100;
+        auto r = solveV(rows);
+        if (r > -1) {
+			x = r * 100;
         }
-        if (c > 0) {
-            x += c;
+        else {
+            auto c = solveV(cols);
+            if (c > -1) {
+                x = c;
+            }
         }
-        println(x);
+        //println(x);
         return x;
     }
 
-    int32_t reflectionPoint(V& v) {
+    int32_t solveV(V& v) {
+        auto r = reflectionPoint(v);
+        if (!part2) {
+			return r;
+		}
+        for (auto a : integers(v.size())) {
+            for (auto b : integers(v[a].size())) {
+                bool t = v[a][b]; // can't use auto here!!
+                v[a][b] = !t;
+                auto r2 = reflectionPoint(v, r);
+                if (r2 > -1 && r2 != r) {
+                    //print_v(v);
+                    //println("smudge: ", a, ", ", b, ", ", r2);
+					return r2;
+				}
+                v[a][b] = t;
+			}
+        }
+        return -1;
+    }
+
+    int32_t reflectionPoint(V& v, int32_t except = -1) {
         for (uint32_t x = 0u; x < v.size() - 1; ++x) {
             auto n = min(x + 1u, ((uint32_t)v.size() - x) - 1u);
             bool ok = true;
@@ -66,19 +92,42 @@ struct Solver
 				}
             }
             if (ok) {
-                return x + 1u;
+                if ((x + 1u) != except) {
+                    return x + 1u;
+                }
             }
         }
         return -1;
+    }
+    int32_t print_v(V& v) {
+        if (&v == &rows) {
+            for (auto a : integers(v.size())) {
+                for (auto b : integers(v[a].size())) {
+                    print(v[a][b] ? '#' : '.');
+                }
+                println();
+            }
+		}
+		else {
+            for (auto a : integers(v[0].size())) {
+                for (auto b : integers(v.size())) {
+                    print(v[b][a] ? '#' : '.');
+                }
+                println();
+            }
+		}
+        println();
+        return 0;
     }
 };
 
 //-----------------------------------------------------------------------------
 int main() {
     try {
-        Solver s;
-        s.solve(false); // 28583 too low, 34037 too high, 33975
-        //s.solve(true);
+        Solver<false> p1;
+        Solver<true> p2;
+        p1.solve(); // 33975
+        p2.solve(); // 29083
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
