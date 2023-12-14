@@ -268,6 +268,14 @@ public:
         auto l = lines();
         return std::vector<string_view>(l.begin(), l.end());
     }
+    auto chars_vec() const {
+        auto l = lines();
+        std::vector<std::vector<char>> v;
+        for (auto l : lines()) {
+            v.push_back(std::vector<char>(l.begin(), l.end()));
+        }
+        return v;
+    }
 };
 //-----------------------------------------------------------------------------
 template <typename T>

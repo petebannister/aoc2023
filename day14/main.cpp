@@ -8,9 +8,27 @@ struct Solver
         Input i;
 
         int64_t ans = 0u;
-        auto grid = i.lines_vec();
+        auto grid = i.chars_vec();
         auto C = grid[0].size();
         auto R = grid.size();
+
+        for (auto c : integers(C)) {
+            size_t mr = 0;
+            for (auto r : integers(R)) {
+                auto& ch = grid[r][c];
+				if (ch == '#') {
+					mr = r + 1;
+				}
+                else if (ch == 'O') {
+                    ans += R - mr;
+                    if (r != mr) {
+                        grid[mr][c] = 'O';
+                        ch = '.';
+                    }
+                    ++mr;
+                }
+            }
+        }
 
         return ans;
     }
