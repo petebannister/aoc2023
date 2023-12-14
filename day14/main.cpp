@@ -1,41 +1,119 @@
 #include "aoc.h"
 
+struct BitGrid
+{
+    static constexpr uint32_t R = 100u;
+    static constexpr uint32_t C = 100u;
+    static constexpr uint32_t Stride = 2u; // 2 QWords = 128 bits, allows fast indexing
+    uint64_t bits[R * Stride];
+    BitGrid() {
+        memset(bits, 0, sizeof(bits));
+	}
+    __forceinline bool get(uint32_t r, uint32_t c) const {
+        auto const x = c >> 6;
+        auto const y = r << 1;
+        auto q = bits[y + x];
+        auto const b = c & 63;
+        return (q >> b) & 1;
+	}
+    __forceinline void set(uint32_t r, uint32_t c, bool v) {
+        auto const x = c >> 6;
+        auto const y = r << 1;
+        auto const b = c & 63;
+        if (v) {
+            bits[y + x] |= 1uLL << b;
+        }
+        else {
+            bits[y + x] &= ~(1uLL << b);
+        }
+    }
+    bool operator==(const BitGrid& rhs) const {
+        for (auto i = 0u; i < R * Stride; ++i) {
+			if (bits[i] != rhs.bits[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+    size_t hash() const {
+        // Not a great hash but fast to compute
+        size_t h = 0;
+		for (auto b : bits) {
+            h += b;
+		}
+        return h;
+	}
+};
+
+namespace std
+{
+    template <>
+    struct hash<BitGrid>
+	{
+		size_t operator()(const BitGrid& g) const {
+            return g.hash();
+		}
+	};
+}
+
+
 //-----------------------------------------------------------------------------
 template <bool PART2>
 struct Solver
 {
     static constexpr bool PART1 = !PART2;
-    using G = vector<vector<char>>;
+    //uint32_t C = 0;
+    //uint32_t R = 0;
 
-    size_t C, R;
-    G grid;
+    static constexpr uint32_t R = 100u;
+    static constexpr uint32_t C = 100u;
+    BitGrid fixed;
+    BitGrid rollers;
 
-    std::map<G, uint32_t> seen;
+    std::unordered_map<BitGrid, uint32_t> seen;
 
     int64_t solve() {
         Input i; // ("example.txt");
+       // for (auto line : i.lines()) {
+        //    ++R;
+        //}
 
-        grid = i.chars_vec();
-        C = grid[0].size();
-        R = grid.size();
+        //C = (*i.lines().begin()).size();
+        //fixed.init(R, C);
+        //rollers.init(R, C);
+
+        uint32_t r = 0;
+        for (auto line : i.lines()) {
+			uint32_t c = 0;
+			for (auto ch : line) {
+				if (ch == '#') {
+					fixed.set(r, c, true);
+				}
+				else if (ch == 'O') {
+                    rollers.set(r, c, true);
+				}
+				++c;
+			}
+			++r;
+		}
 
         if (PART1) {
             rollN();
         }
         else {
-            seen[grid] = 0u;
+            seen[rollers] = 0u;
             auto L = findLoop();
-            println("loop: ", L.first, " ", L.second);
+            //println("loop: ", L.first, " ", L.second);
             // 1000000000uL
             auto offset = L.first;
             auto cycle_length = L.second;
             auto n = 1000000000uL - (offset + 1);
             auto stat_cycle = offset + n % cycle_length;
-            println("cycle: ", stat_cycle);
+            //println("cycle: ", stat_cycle);
             for (auto&& g : seen) {
                 if (g.second == stat_cycle) {
-					grid = g.first;
-                    println("found");
+                    rollers = g.first;
+                    //println("found");
 					break;
 				}
 			}
@@ -51,26 +129,25 @@ struct Solver
         uint32_t cycle = 0;
         for (;;++cycle) {
             rollCycle();
-			auto it = seen.find(grid);
+			auto it = seen.find(rollers);
 			if (it != seen.end()) {
 				return { it->second, cycle - it->second };
 			}
-			seen[grid] = cycle;
+			seen[rollers] = cycle;
         }
     }
 
     void rollN() {
-        for (auto c : integers(C)) {
-            size_t mr = 0;
-            for (auto r : integers(R)) {
-                auto& ch = grid[r][c];
-                if (ch == '#') {
+        for (uint32_t c = 0; c < C; ++c) {
+            uint32_t mr = 0;
+            for (uint32_t r = 0; r < R; ++r) {
+                if (fixed.get(r, c)) { // '#'
                     mr = r + 1;
                 }
-                else if (ch == 'O') {
+                else if (rollers.get(r, c)) { // 'O'
                     if (r != mr) {
-                        grid[mr][c] = 'O';
-                        ch = '.';
+                        rollers.set(mr, c, true);
+                        rollers.set(r, c, false);
                     }
                     ++mr;
                 }
@@ -78,18 +155,17 @@ struct Solver
         }
     }
     void rollS() {
-        for (size_t c = 0; c < C; ++c) {
-            size_t mr = R - 1;
+        for (uint32_t c = 0; c < C; ++c) {
+            uint32_t mr = R - 1;
             auto r = R;
             while (r--) {
-                auto& ch = grid[r][c];
-                if (ch == '#') {
+                if (fixed.get(r, c)) { // '#'
                     mr = r - 1;
                 }
-                else if (ch == 'O') {
+                else if (rollers.get(r, c)) { // 'O'
                     if (r != mr) {
-                        grid[mr][c] = 'O';
-                        ch = '.';
+                        rollers.set(mr, c, true);
+                        rollers.set(r, c, false);
                     }
                     --mr;
                 }
@@ -97,17 +173,16 @@ struct Solver
         }
     }
     void rollW() {
-        for (size_t r = 0; r < R; ++r) {
-            size_t mc = 0;
-            for (size_t c = 0; c < C; ++c) {
-                auto& ch = grid[r][c];
-                if (ch == '#') {
+        for (uint32_t r = 0; r < R; ++r) {
+            uint32_t mc = 0;
+            for (uint32_t c = 0; c < C; ++c) {
+                if (fixed.get(r, c)) { // '#'
                     mc = c + 1;
                 }
-                else if (ch == 'O') {
+                else if (rollers.get(r, c)) { // 'O'
                     if (c != mc) {
-                        grid[r][mc] = 'O';
-                        ch = '.';
+                        rollers.set(r, mc, true);
+                        rollers.set(r, c, false);
                     }
                     ++mc;
                 }
@@ -115,18 +190,17 @@ struct Solver
         }
     }
     void rollE() {
-        for (size_t r = 0; r < R; ++r) {
-            size_t mc = C - 1;
-            size_t c = C;
+        for (uint32_t r = 0; r < R; ++r) {
+            uint32_t mc = C - 1;
+            uint32_t c = C;
             while (c--) {
-                auto& ch = grid[r][c];
-                if (ch == '#') {
+                if (fixed.get(r, c)) { // '#'
                     mc = c - 1;
                 }
-                else if (ch == 'O') {
+                else if (rollers.get(r, c)) { // 'O'
                     if (c != mc) {
-                        grid[r][mc] = 'O';
-                        ch = '.';
+                        rollers.set(r, mc, true);
+                        rollers.set(r, c, false);
                     }
                     --mc;
                 }
@@ -142,10 +216,9 @@ struct Solver
 
     int64_t calcLoad() {
         int64_t ans = 0;
-        for (auto c : integers(C)) {
-            for (auto r : integers(R)) {
-                auto& ch = grid[r][c];
-                if (ch == 'O') {
+        for (uint32_t c = 0; c < C; ++c) {
+            for (uint32_t r = 0; r < R; ++r) {
+                if (rollers.get(r, c)) {
                     ans += R - r;
                 }
             }
@@ -162,13 +235,16 @@ int main() {
         Solver<true> p2;
         Stopwatch sw;
 
-        sw.start();
-        println("part1: ", p1.solve());
-        sw.stop_print();
 
         sw.start();
-        println("part2: ", p2.solve()); // 104619
+        auto r1 = p1.solve();
         sw.stop_print();
+        println("part1: ", r1);
+
+        sw.start();
+        auto r2 = p2.solve();
+        sw.stop_print();
+        println("part2: ", r2); // 104619
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
