@@ -4,8 +4,9 @@
 template <bool PART2>
 struct Solver
 {
-    int64_t solve(bool part2) {
-        Input i;
+    static constexpr bool PART1 = !PART2;
+    int64_t solve() {
+        Input i;//("example.txt");
 
         int64_t ans = 0u;
         auto grid = i.lines_vec();
@@ -20,9 +21,9 @@ struct Solver
 int main() {
     try {
         Solver<false> p1;
-        Solver<false> p2;
-        println("part1: ", p1.solve(false));
-        println("part2: ", p2.solve(false));
+        Solver<true> p2;
+        println("part1: ", p1.solve());
+        println("part2: ", p2.solve());
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
