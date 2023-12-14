@@ -12,7 +12,7 @@ struct Solver
 
     std::map<G, uint32_t> seen;
 
-    int64_t solve(bool part2) {
+    int64_t solve() {
         Input i; // ("example.txt");
 
         grid = i.chars_vec();
@@ -160,8 +160,8 @@ int main() {
     try {
         Solver<false> p1;
         Solver<true> p2;
-        println("part1: ", p1.solve(false));
-        println("part2: ", p2.solve(false)); // 104619
+        println("part1: ", p1.solve());
+        println("part2: ", p2.solve()); // 104619
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
