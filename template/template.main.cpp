@@ -20,10 +20,19 @@ struct Solver
 //-----------------------------------------------------------------------------
 int main() {
     try {
+        Stopwatch sw;
+
         Solver<false> p1;
+        sw.start();
+        auto r1 = p1.solve();
+        sw.stop_print();
+        println("part1: ", r1);
+
         Solver<true> p2;
-        println("part1: ", p1.solve());
-        println("part2: ", p2.solve());
+        sw.start();
+        auto r2 = p2.solve();
+        sw.stop_print();
+        println("part2: ", r2);
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
