@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <deque>
@@ -418,3 +419,37 @@ namespace std {
         }
     };
 }
+
+struct Stopwatch
+{
+    using clock = std::chrono::high_resolution_clock;
+	using time_point = clock::time_point;
+	using duration = clock::duration;
+	time_point start_;
+	time_point end_;
+	Stopwatch() {
+		start();
+	}
+	void start() {
+		start_ = clock::now();
+	}
+	void stop() {
+		end_ = clock::now();
+	}
+	auto elapsed() const {
+		return end_ - start_;
+	}
+	auto elapsed_ms() const {
+		return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed());
+	}
+	auto elapsed_us() const {
+		return std::chrono::duration_cast<std::chrono::microseconds>(elapsed());
+	}
+	auto elapsed_ns() const {
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed());
+	}
+    void stop_print() {
+        stop();
+        println("elapsed: ", elapsed_us().count() * 0.001, "ms");
+    }
+};

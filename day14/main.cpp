@@ -160,8 +160,15 @@ int main() {
     try {
         Solver<false> p1;
         Solver<true> p2;
+        Stopwatch sw;
+
+        sw.start();
         println("part1: ", p1.solve());
+        sw.stop_print();
+
+        sw.start();
         println("part2: ", p2.solve()); // 104619
+        sw.stop_print();
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
