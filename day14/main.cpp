@@ -8,14 +8,14 @@ struct BitGrid
     uint64_t bits[R * Stride];
     BitGrid() {
         memset(bits, 0, sizeof(bits));
-	}
+    }
     __forceinline bool get(uint32_t r, uint32_t c) const {
         auto const x = c >> 6;
         auto const y = r << 1;
         auto q = bits[y + x];
         auto const b = c & 63;
         return (q >> b) & 1;
-	}
+    }
     __forceinline void set(uint32_t r, uint32_t c, bool v) {
         auto const x = c >> 6;
         auto const y = r << 1;
@@ -29,31 +29,31 @@ struct BitGrid
     }
     bool operator==(const BitGrid& rhs) const {
         for (auto i = 0u; i < R * Stride; ++i) {
-			if (bits[i] != rhs.bits[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+            if (bits[i] != rhs.bits[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
     size_t hash() const {
         // Not a great hash but fast to compute
         size_t h = 0;
-		for (auto b : bits) {
+        for (auto b : bits) {
             h += b;
-		}
+        }
         return h;
-	}
+    }
 };
 
 namespace std
 {
     template <>
     struct hash<BitGrid>
-	{
-		size_t operator()(const BitGrid& g) const {
+    {
+        size_t operator()(const BitGrid& g) const {
             return g.hash();
-		}
-	};
+        }
+    };
 }
 
 
@@ -84,18 +84,18 @@ struct Solver
 
         uint32_t r = 0;
         for (auto line : i.lines()) {
-			uint32_t c = 0;
-			for (auto ch : line) {
-				if (ch == '#') {
-					fixed.set(r, c, true);
-				}
-				else if (ch == 'O') {
+            uint32_t c = 0;
+            for (auto ch : line) {
+                if (ch == '#') {
+                    fixed.set(r, c, true);
+                }
+                else if (ch == 'O') {
                     rollers.set(r, c, true);
-				}
-				++c;
-			}
-			++r;
-		}
+                }
+                ++c;
+            }
+            ++r;
+        }
 
         if (PART1) {
             rollN();
@@ -114,9 +114,9 @@ struct Solver
                 if (g.second == stat_cycle) {
                     rollers = g.first;
                     //println("found");
-					break;
-				}
-			}
+                    break;
+                }
+            }
         }
 
         int64_t ans = calcLoad();
@@ -129,11 +129,11 @@ struct Solver
         uint32_t cycle = 0;
         for (;;++cycle) {
             rollCycle();
-			auto it = seen.find(rollers);
-			if (it != seen.end()) {
-				return { it->second, cycle - it->second };
-			}
-			seen[rollers] = cycle;
+            auto it = seen.find(rollers);
+            if (it != seen.end()) {
+                return { it->second, cycle - it->second };
+            }
+            seen[rollers] = cycle;
         }
     }
 
