@@ -25,17 +25,17 @@ struct Solver
         else {
             seen[grid] = 0u;
             auto L = findLoop();
-            println("loop: ", L.first, " ", L.second);
+            //println("loop: ", L.first, " ", L.second);
             // 1000000000uL
             auto offset = L.first;
             auto cycle_length = L.second;
             auto n = 1000000000uL - (offset + 1);
             auto stat_cycle = offset + n % cycle_length;
-            println("cycle: ", stat_cycle);
+            //println("cycle: ", stat_cycle);
             for (auto&& g : seen) {
                 if (g.second == stat_cycle) {
 					grid = g.first;
-                    println("found");
+                    //println("found");
 					break;
 				}
 			}
@@ -163,12 +163,14 @@ int main() {
         Stopwatch sw;
 
         sw.start();
-        println("part1: ", p1.solve());
+        auto r1 = p1.solve();
         sw.stop_print();
+        println("part1: ", r1);
 
         sw.start();
-        println("part2: ", p2.solve()); // 104619
+        auto r2 = p2.solve();
         sw.stop_print();
+        println("part2: ", r2); // 104619
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
