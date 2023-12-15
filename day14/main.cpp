@@ -1,29 +1,67 @@
 #include "aoc.h"
 #include <immintrin.h>
 
+struct Grid
+{
+    char v[100][128];
+
+    Grid() {
+		memset(v, '.', sizeof(v));
+	}
+
+    bool operator==(const Grid& rhs) const {
+		return 0 == memcmp(v, rhs.v, sizeof(v));
+	}
+    bool operator<(const Grid& rhs) const {
+        return 0 < memcmp(v, rhs.v, sizeof(v));
+    }
+    size_t hash() const {
+		return std::hash<std::string_view>{}(std::string_view(&v[0][0], sizeof(v)));
+	}
+    char* operator[](size_t r) {
+		return v[r];
+	}
+};
+namespace std {
+	template <>
+	struct hash<Grid>
+	{
+		size_t operator()(const Grid& g) const {
+			return g.hash();
+		}
+	};
+}
+
 //-----------------------------------------------------------------------------
 template <bool PART2>
 struct Solver
 {
     static constexpr bool PART1 = !PART2;
-    using G = vector<vector<char>>;
 
-    size_t C, R;
-    G grid;
+    static constexpr uint8_t C = 100u;
+    static constexpr uint8_t R = 100u;
 
-    std::map<G, uint32_t> seen;
+    Grid grid;
+
+    std::unordered_map<Grid, uint32_t> seen;
 
     int64_t solve() {
         Input i; // ("example.txt");
 
-        grid = i.chars_vec();
-        C = grid[0].size();
-        R = grid.size();
-
-        for (auto&& r : grid) {
-            // Extend grid rows to next multiple 64 bytes since we are doing SIMD
-            r.resize((r.size() + 63) & ~63, '.');
+        auto y = 0u;
+        for (auto line : i.lines()) {
+            memcpy(grid[y], line.data(), line.size());
+            ++y;
         }
+
+        //grid = i.chars_vec();
+        //C = grid[0].size();
+        //R = grid.size();
+
+        //for (auto&& r : grid) {
+            // Extend grid rows to next multiple 64 bytes since we are doing SIMD
+        //    r.resize((r.size() + 63) & ~63, '.');
+        //}
 
         if (PART1) {
             rollN_AVX();
@@ -186,30 +224,24 @@ struct Solver
     }
 #endif
 
-    void rotateCW() {
+    void rotate() {
+        auto tmp = grid;
         for (auto r : integers(R)) {
             for (auto c : integers(C)) {
-                grid[r][c] = grid[c][R - 1 - r];
+                tmp[r][c] = grid[C - 1 - c][r];
             }
         }
+        grid = std::move(tmp);
     }
-    void rotateCCW() {
-        for (auto r : integers(R)) {
-            for (auto c : integers(C)) {
-                grid[r][c] = grid[C - 1 - c][r];
-            }
-        }
-    }
-
     void rollCycle() {
-        rollN();
-        rotateCCW();
-        rollN();
-        rotateCCW();
-        rollN();
-        rotateCCW();
-        rollN();
-        rotateCCW();
+        rollN_AVX();
+        rotate();
+        rollN_AVX();
+        rotate();
+        rollN_AVX();
+        rotate();
+        rollN_AVX();
+        rotate();
     }
 
     int64_t calcLoad() {
