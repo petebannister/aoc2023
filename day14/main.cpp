@@ -16,7 +16,9 @@ struct Grid
         return 0 < memcmp(v, rhs.v, sizeof(v));
     }
     size_t hash() const {
-		return std::hash<std::string_view>{}(std::string_view(&v[0][0], sizeof(v)));
+        auto* e = (char*)v + sizeof(v);
+        return std::accumulate((char*)v, e, 0u); 
+		//return std::hash<std::string_view>{}(std::string_view(&v[0][0], sizeof(v)));
 	}
     char* operator[](size_t r) {
 		return v[r];
@@ -136,7 +138,60 @@ struct Solver
     void rollN_AVX() {
         rollN_AVX_C<0u>();
         rollN_AVX_C<64u>();
-        //printGrid();
+    }
+    template <uint8_t c>
+    void rollS_AVX_C()
+    {
+        __m512i mr = _mm512_set1_epi8(R - 1);
+        auto r = R;
+        while (r--) {
+            auto* pr = &grid[r][c];
+            auto ch = _mm512_loadu_si512(pr);
+            auto rv = _mm512_set1_epi8(r);
+            auto fixed = _mm512_cmpeq_epu8_mask(ch, _mm512_set1_epi8('#'));
+            mr = _mm512_mask_add_epi8(mr, fixed, rv, _mm512_set1_epi8(-1));
+            auto movable = _mm512_cmpeq_epu8_mask(ch, _mm512_set1_epi8('O'));
+            auto need_move = _mm512_cmpneq_epu8_mask(rv, mr);
+            need_move &= ~fixed;
+            need_move &= movable;
+            // if anything set in need_move
+            if (need_move) {
+                auto new_ch = _mm512_mask_mov_epi8(ch, need_move, _mm512_set1_epi8('.'));
+                _mm512_storeu_si512(pr, new_ch);
+                uint8_t mrb[64];
+                _mm512_storeu_si512(mrb, mr);
+                for (uint8_t i = 0; i < 64; ++i) {
+                    if (0 != (need_move & 1)) {
+                        grid[mrb[i]][c + i] = 'O';
+                    }
+                    need_move >>= 1;
+                }
+            }
+            mr = _mm512_mask_add_epi8(mr, movable, mr, _mm512_set1_epi8(-1));
+        }
+    }
+    void rollS() {
+        for (size_t c = 0; c < C; ++c) {
+            size_t mr = R - 1;
+            auto r = R;
+            while (r--) {
+                auto& ch = grid[r][c];
+                if (ch == '#') {
+                    mr = r - 1;
+                }
+                else if (ch == 'O') {
+                    if (r != mr) {
+                        grid[mr][c] = 'O';
+                        ch = '.';
+                    }
+                    --mr;
+                }
+            }
+        }
+    }
+    void rollS_AVX() {
+        rollS_AVX_C<0u>();
+        rollS_AVX_C<64u>();
     }
     void printGrid() {
         for (auto&& r : grid) {
@@ -165,26 +220,7 @@ struct Solver
             }
         }
     }
-#if 0
-    void rollS() {
-        for (size_t c = 0; c < C; ++c) {
-            size_t mr = R - 1;
-            auto r = R;
-            while (r--) {
-                auto& ch = grid[r][c];
-                if (ch == '#') {
-                    mr = r - 1;
-                }
-                else if (ch == 'O') {
-                    if (r != mr) {
-                        grid[mr][c] = 'O';
-                        ch = '.';
-                    }
-                    --mr;
-                }
-            }
-        }
-    }
+#if 1
     void rollW() {
         for (size_t r = 0; r < R; ++r) {
             size_t mc = 0;
@@ -234,6 +270,13 @@ struct Solver
         grid = std::move(tmp);
     }
     void rollCycle() {
+#if 0
+        rollN_AVX();
+        rollW();
+        rollS_AVX();
+        rollE();
+#else
+        // Slightly faster.  If rollW / rollE could be vectorised then maybe that would be quicker.
         rollN_AVX();
         rotate();
         rollN_AVX();
@@ -242,6 +285,7 @@ struct Solver
         rotate();
         rollN_AVX();
         rotate();
+#endif
     }
 
     int64_t calcLoad() {
