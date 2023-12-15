@@ -1,4 +1,5 @@
 #include "aoc.h"
+#include <immintrin.h>
 
 //-----------------------------------------------------------------------------
 template <bool PART2>
@@ -19,8 +20,13 @@ struct Solver
         C = grid[0].size();
         R = grid.size();
 
+        for (auto&& r : grid) {
+            // Extend grid rows to next multiple 64 bytes since we are doing SIMD
+            r.resize((r.size() + 63) & ~63, '.');
+        }
+
         if (PART1) {
-            rollN();
+            rollN_AVX();
         }
         else {
             seen[grid] = 0u;
@@ -34,11 +40,11 @@ struct Solver
             //println("cycle: ", stat_cycle);
             for (auto&& g : seen) {
                 if (g.second == stat_cycle) {
-					grid = g.first;
+                    grid = g.first;
                     //println("found");
-					break;
-				}
-			}
+                    break;
+                }
+            }
         }
 
         int64_t ans = calcLoad();
@@ -51,14 +57,58 @@ struct Solver
         uint32_t cycle = 0;
         for (;;++cycle) {
             rollCycle();
-			auto it = seen.find(grid);
-			if (it != seen.end()) {
-				return { it->second, cycle - it->second };
-			}
-			seen[grid] = cycle;
+            auto it = seen.find(grid);
+            if (it != seen.end()) {
+                return { it->second, cycle - it->second };
+            }
+            seen[grid] = cycle;
         }
     }
 
+    template <uint8_t c>
+    void rollN_AVX_C() 
+    {
+        __m512i mr = _mm512_setzero_si512();
+        for (uint8_t r = 0; r < R; ++r) {
+            auto* pr = &grid[r][c];
+            auto ch = _mm512_loadu_si512(pr);
+            auto rv = _mm512_set1_epi8(r);
+            auto fixed = _mm512_cmpeq_epu8_mask(ch, _mm512_set1_epi8('#'));
+            mr = _mm512_mask_add_epi8(mr, fixed, rv, _mm512_set1_epi8(1));
+            auto movable = _mm512_cmpeq_epu8_mask(ch, _mm512_set1_epi8('O'));
+            auto need_move = _mm512_cmpneq_epu8_mask(rv, mr);
+            need_move &= ~fixed;
+            need_move &= movable;
+            // if anything set in need_move
+            if (need_move) {
+                auto new_ch = _mm512_mask_mov_epi8(ch, need_move, _mm512_set1_epi8('.'));
+                _mm512_storeu_si512(pr, new_ch);
+                uint8_t mrb[64];
+                _mm512_storeu_si512(mrb, mr);
+                for (uint8_t i = 0; i < 64; ++i) {
+                    if (0 != (need_move & 1)) {
+                        grid[mrb[i]][c + i] = 'O';
+                    }
+                    need_move >>= 1;
+                }
+            }
+            mr = _mm512_mask_add_epi8(mr, movable, mr, _mm512_set1_epi8(1));
+        }
+    }
+    void rollN_AVX() {
+        rollN_AVX_C<0u>();
+        rollN_AVX_C<64u>();
+        //printGrid();
+    }
+    void printGrid() {
+        for (auto&& r : grid) {
+            for (auto&& c : r) {
+				print(c);
+			}
+            println();
+		}
+        println();
+    }
     void rollN() {
         for (auto c : integers(C)) {
             size_t mr = 0;
@@ -77,6 +127,7 @@ struct Solver
             }
         }
     }
+#if 0
     void rollS() {
         for (size_t c = 0; c < C; ++c) {
             size_t mr = R - 1;
@@ -133,11 +184,32 @@ struct Solver
             }
         }
     }
+#endif
+
+    void rotateCW() {
+        for (auto r : integers(R)) {
+            for (auto c : integers(C)) {
+                grid[r][c] = grid[c][R - 1 - r];
+            }
+        }
+    }
+    void rotateCCW() {
+        for (auto r : integers(R)) {
+            for (auto c : integers(C)) {
+                grid[r][c] = grid[C - 1 - c][r];
+            }
+        }
+    }
+
     void rollCycle() {
         rollN();
-        rollW();
-        rollS();
-        rollE();
+        rotateCCW();
+        rollN();
+        rotateCCW();
+        rollN();
+        rotateCCW();
+        rollN();
+        rotateCCW();
     }
 
     int64_t calcLoad() {
@@ -165,7 +237,7 @@ int main() {
         sw.start();
         auto r1 = p1.solve();
         sw.stop_print();
-        println("part1: ", r1);
+        println("part1: ", r1); // 112046
 
         sw.start();
         auto r2 = p2.solve();

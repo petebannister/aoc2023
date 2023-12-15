@@ -8,3 +8,8 @@ target_compile_definitions(day14 PUBLIC -D_SECURE_SCL=0)
 target_include_directories(day14 PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_include_directories(day14 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../common)
 configure_file("${CMAKE_CURRENT_LIST_DIR}/../launch.vs.json.in" "${CMAKE_CURRENT_LIST_DIR}/.vs/launch.vs.json" @ONLY)
+
+# enable SSE and AVX
+if(MSVC)
+	target_compile_options(day14 PUBLIC /arch:AVX2)
+endif()
