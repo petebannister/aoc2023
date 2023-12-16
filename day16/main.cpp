@@ -100,6 +100,10 @@ struct Solver
 			step(v.first, v.second);
 		}
 	}
+	void reset() {
+		energised.clear();
+		visited.clear();
+	}
     int64_t solve() {
         Input i;//("example.txt");
 
@@ -108,13 +112,46 @@ struct Solver
         C = grid[0].size();
         R = grid.size();
 
-        auto p = Point{0,0};
-        Dir d = Point{1,0};
+		if (PART1) {
+			auto p = Point{ 0,0 };
+			Dir d = Point{ 1,0 };
+			beam(p, d);
+			ans = energised.size();
+		}
+		else {
+			for (auto c : integers(C)) {
+				auto p = Point{ (int)c,0 };
+				Dir d = Point{ 0,1 };
+				beam(p, d);
+				int64_t n = energised.size();
+				ans = max(ans, n);
+				reset();
 
-        beam(p,d);
+				p = Point{ (int)c,(int)R-1 };
+				d = Point{ 0,-1 };
+				beam(p, d);
+				n = energised.size();
+				ans = max(ans, n);
+				reset();
+			}
+			for (auto r : integers(R)) {
+				auto p = Point{ 0, (int)r };
+				Dir d = Point{ 1,0 };
+				beam(p, d);
+				int64_t n = energised.size();
+				ans = max(ans, n);
+				reset();
 
-        ans = energised.size();
-        printGrid2();
+				p = Point{ (int)C-1, (int)r };
+				d = Point{ -1,0 };
+				beam(p, d);
+				n = energised.size();
+				ans = max(ans, n);
+				reset();
+			}
+		}
+
+        // printGrid2();
         return ans;
     }
 
@@ -181,13 +218,13 @@ int main() {
         sw.start();
         auto r1 = p1.solve();
         sw.stop_print();
-        println("part1: ", r1); // 9353 too high
+        println("part1: ", r1); // 9353 too high, 6883
 
         Solver<true> p2;
         sw.start();
         auto r2 = p2.solve();
         sw.stop_print();
-        println("part2: ", r2);
+        println("part2: ", r2); // 7203 too low..
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
