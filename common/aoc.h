@@ -256,6 +256,10 @@ public:
     Input(Input&&) = delete;
     Input& operator=(Input&&) = delete;
 
+    size_t size() const {
+		return size_;
+	}
+
     char const* data() {
         return data_.get();
     }

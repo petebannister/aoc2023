@@ -1,0 +1,13 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "day17.exe",
+      "name": "day17.exe",
+      "currentDir": "C:/work/aoc2023/day17"
+    }
+  ]
+}
