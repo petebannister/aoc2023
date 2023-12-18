@@ -350,6 +350,9 @@ struct TPoint {
     constexpr self operator-(self const& rhs) const {
         return { x - rhs.x, y - rhs.y };
     }
+    constexpr self operator-() const {
+        return { -x, -y };
+    }
     constexpr self operator+(self const& rhs) const {
         return { x + rhs.x, y + rhs.y };
     }
