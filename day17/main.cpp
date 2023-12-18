@@ -66,9 +66,9 @@ struct Solver
 
         auto const start = Point(0, 0);
         auto const target = Point(C - 1, R - 1);
-        queue.push_back(Move{ start, Dir(1, 0), 1u });
+        queue.push_back(Move{ start, Dir(1, 0), 0u });
         costs[queue.back()] = 0u;
-        queue.push_back(Move{ start, Dir(0, 1), 1u });
+        queue.push_back(Move{ start, Dir(0, 1), 0u });
         costs[queue.back()] = 0u;
 
         while (!queue.empty()) {
@@ -151,9 +151,6 @@ struct Solver
             if constexpr (PART2) {
                 println(min_cost);
                 //printRoute(m);
-                if (min_cost == 827) {
-                    printRoute(m);
-                }
             }
 		}
         else {
@@ -165,7 +162,7 @@ struct Solver
             queue.push_back(m);
 		}
 	}
-#if 1
+#if 0
     void printRoute(Move m) {
         std::vector<char> grid(R * C, '.');
         std::vector<Move> queue;
@@ -243,7 +240,7 @@ int main() {
         sw.start();
         auto r2 = p2.solve();
         sw.stop_print();
-        println("part2: ", r2); // 827 too low, 897 too high. 828 wrong.
+        println("part2: ", r2); // 829
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
