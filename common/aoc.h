@@ -61,6 +61,17 @@ inline T parse(string_view s) {
     return v;
 }
 //-----------------------------------------------------------------------------
+template<typename T>
+inline T parseHex(string_view s) {
+    T v;
+    from_chars_result r = std::from_chars(s.data(), s.data() + s.size(), v, 16);
+    if (r.ec != std::errc()) {
+        printf("Failed to parse: %s\n", s.data());
+        exit(-1);
+    }
+    return v;
+}
+//-----------------------------------------------------------------------------
 inline void trim_left(string_view& s) {
     while (!s.empty() && isspace(s.front())) {
         s.remove_prefix(1);
