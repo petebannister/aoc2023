@@ -224,7 +224,7 @@ int main() {
         sw.start();
         auto r2 = p2.solve();
         sw.stop_print();
-        println("part2: ", r2); // 7203 too low..
+        println("part2: ", r2);
     }
     catch (const exception& e) {
         printf("Exception: %s\n", e.what());
